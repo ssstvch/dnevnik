@@ -1,0 +1,9 @@
+@import "./styles/base/01_normalize";
+@import "./styles/base/_mixins.scss";
+@import "./styles/global/_fonts.scss";
+@import "./styles/global/_global.scss";
+@import "./styles/global/_variables.scss";
+
+body {
+  font-family: $font-family;
+}

@@ -1,0 +1,26 @@
+.studentCard {
+  padding-bottom: 4rem;
+  position: relative;
+  width: 620px;
+
+  &__body {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    &_right {
+      text-align: right;
+    }
+  }
+  &__header {
+    display: flex;
+    justify-content: space-between;
+  }
+  &__buttons {
+    position: absolute;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    > .btn-primary {
+      margin-right: 1rem;
+    }
+  }
+}
