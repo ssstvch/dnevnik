@@ -1,7 +1,14 @@
-import { makeAutoObservable } from "mobx";
+import { makeAutoObservable, runInAction } from "mobx";
+import localforage from "localforage";
 
 export default class StudentStore {
-  students = [
+  isLoading = false;
+  isLoaded = false;
+  error = false;
+
+  students = [];
+  dataForTable = [];
+  startData = [
     {
       id: 37219,
       surname: "Шестаков",
@@ -124,16 +131,21 @@ export default class StudentStore {
     },
   ];
 
-  constructor() {
-    makeAutoObservable(this);
-  }
+  show = false;
+  showModal = (choise) => {
+    this.show = choise;
+  };
 
-  dataForTable = [];
+  constructor() {
+    makeAutoObservable(this, { deep: true });
+  }
 
   changeStudentsForTable = () => {
     this.dataForTable = JSON.parse(JSON.stringify(this.students));
-    console.log(this.students[2].history);
-    console.log(this.student === this.dataForTable);
+    this.dataForTable.map((student, i) => {
+      if (student.surname.length === 0) return this.dataForTable.splice(i, 1);
+      return true;
+    });
     this.students.map((student, i) => {
       for (let key in student) {
         if (
@@ -144,22 +156,126 @@ export default class StudentStore {
           key === "inorganic"
         ) {
           let grades = [...student[key]];
+          if (grades.length === 0) return "оценки не выставлены";
+          console.log(grades);
           let grade = parseFloat(
             (grades.reduce((a, b) => a + b) / grades.length).toFixed(1)
           );
           this.dataForTable[i][key] = grade;
         }
       }
+      return true;
     });
-    console.log(this.student === this.dataForTable);
-    console.log(this.students[2].history);
+  };
+
+  loadData = () => {
+    this.isLoading = true;
+
+    runInAction(() => {
+      localforage
+        .getItem("students")
+        .then((v) => {
+          if (v === null) {
+            localforage
+              .setItem("students", JSON.stringify(this.startData))
+              .then((v) => {
+                this.students = JSON.parse(v);
+                this.changeStudentsForTable();
+                this.isLoading = false;
+                this.isLoaded = true;
+              });
+          } else {
+            this.students = JSON.parse(v);
+            this.changeStudentsForTable();
+            this.isLoading = false;
+
+            this.isLoaded = true;
+          }
+        })
+        .catch((error) => {
+          this.error = error;
+          console.log(error);
+        });
+    });
   };
 
   add = (student) => {
-    this.students.push(student);
+    this.isLoading = true;
+    let newStudent = student;
+    // add id
+    let id = this.students[this.students.length - 1].id + 1;
+    newStudent.id = id;
+    // change date format
+    let newDate = this.changeDate(student);
+    newStudent.date = newDate;
+    this.students.push(newStudent);
+    this.changeStudentsForTable();
+    // add changes in localforage
+    localforage.setItem("students", JSON.stringify(this.students)).then(
+      runInAction(() => {
+        this.isLoading = false;
+        this.isLoaded = true;
+      })
+    );
   };
 
-  remove = (index) => {
-    this.students.splice(index, 1);
+  remove = (id) => {
+    this.isLoading = true;
+    this.students.map((s, i) => {
+      console.log(s);
+      if (s.id === +id) {
+        this.students.splice(i, 1);
+        this.show = false;
+      }
+    });
+    this.changeStudentsForTable();
+    // add changes in localforage
+    localforage.setItem("students", JSON.stringify(this.students)).then(
+      runInAction(() => {
+        this.isLoading = false;
+        this.isLoaded = true;
+      })
+    );
+  };
+
+  change = (student) => {
+    this.isLoading = true;
+    let index;
+    let oldNote;
+    let newStudent = student;
+    this.students.map((s, i) => {
+      if (s.id === +student.id) {
+        oldNote = JSON.parse(JSON.stringify(s));
+        index = i;
+      }
+    });
+    // change date format
+    let newDate = this.changeDate(student);
+    newStudent.date = newDate;
+    // comparison
+    let change = JSON.stringify(newStudent) === JSON.stringify(oldNote);
+    if (!change) {
+      this.students[index] = newStudent;
+      this.changeStudentsForTable();
+    }
+    // add changes in localforage
+    localforage.setItem("students", JSON.stringify(this.students)).then(
+      runInAction(() => {
+        this.isLoading = false;
+        this.isLoaded = true;
+      })
+    );
+  };
+
+  changeDate = (student) => {
+    if (student.date[2] === ".") {
+      return student.date;
+    } else {
+      let date = student.date;
+      let year = date.slice(0, 4);
+      let month = date.slice(5, 7);
+      let day = date.slice(8, 10);
+      return `${day}.${month}.${year}`;
+    }
   };
 }

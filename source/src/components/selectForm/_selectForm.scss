@@ -1,0 +1,27 @@
+.modal {
+  &__grades {
+    display: flex;
+    font-size: 0.8rem;
+    width: 110px;
+    flex-wrap: wrap;
+    &_grade {
+      padding: 0 0.15rem;
+      border-right: 1px solid silver;
+      :nth-child(0) {
+        padding-left: 3rem;
+      }
+    }
+    &_choice {
+      width: 60px;
+    }
+    &_btn {
+      margin-left: 0.5vw;
+      width: 40px;
+      font-size: 0.75rem;
+    }
+  }
+}
+
+.col {
+  width: 20vw;
+}

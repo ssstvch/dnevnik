@@ -4,7 +4,24 @@
     justify-content: space-between;
   }
 }
+#search-bar-0-label {
+  display: none;
+}
 
+.sr-only {
+  display: none;
+}
+
+.sortable,
+th {
+  font-size: 0.7rem;
+}
+.react-bootstrap-table-pagination-list {
+  width: 7.5rem;
+}
+.react-bootstrap-table-pagination {
+  justify-content: space-between;
+}
 /* Missing from Boostrap CSS */
 .caret {
   display: inline-block;
